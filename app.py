@@ -1,9 +1,11 @@
 import vk_api
 from vk_api.longpoll import VkLongPoll, VkEventType
 
+from resources.instruments import recognize_command
+from resources.instruments import write_msg
+from resources.instruments import check_params
+
 from config import config
-from resources.commands import commands
-from resources.functional import write_msg
 
 #подключение к апи
 token = config['api']['api_key']
@@ -17,6 +19,18 @@ for event in longpoll.listen():
     print(event.raw)
     print('-'*22)
 
-    if event.type == VkEventType.MESSAGE_NEW and event.text:
-        if event.to_me:
-            write_msg(event.peer_id, event.text)
+    if event.raw[0] == 4: #если пришло сообщение
+        print(recognize_command(event.raw[5].lower(), event.peer_id, echo=False))
+        if recognize_command(event.raw[5].lower(), event.peer_id, echo=True)[0]: #если пришла команда
+            print('\n\n')
+            print('Пришла команда')
+            print('\n\n')
+            check_params(event)
+
+        else:
+            print('\n\n')
+            print('Это не команда')
+            print('\n\n')
+
+    if event.raw[1] == 6: #Если это новый участник
+        write_msg(event.peer_id, 'Новый уастник')

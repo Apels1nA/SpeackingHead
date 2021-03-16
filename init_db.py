@@ -1,8 +1,6 @@
 import psycopg2
 from config import config
 
-print(config['db'])
-
 con = psycopg2.connect(
         database=config['db']['db'], 
         user=config['db']['user'], 

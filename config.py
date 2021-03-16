@@ -17,7 +17,7 @@ development = {
     'api': {
         'api_key': 'e89cf97cc3b7fa7a0d3b00c53026e1ac7dc72b030d9f041757b2f397440eaf80bf89633451483cd0337ec'
     },
-    'path': '/Users/ilyamiskelo/Projects/SpeackingHead/vk_api'
+    'path': '/Users/ilyamiskelo/Projects/SpeackingHead'
 }
 
 production = {
