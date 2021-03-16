@@ -64,7 +64,7 @@ def write_msg(peer_id, message): # отправляет сообщение messa
 def check_params(event):#Принимает event, возвращает [command_id,{'params_nam': value}] если параметры верные и False если команда написана неправильно
     #берем айди команды
     command_id = recognize_command(event.raw[5].lower(), event.peer_id, echo=False)[1]
-    cammand_name = Command.get(Command.id == command_id).name_eng
+    command_name = Command.get(Command.id == command_id).name_eng
     message = event.text.lower()
     #Определяем, пересылали ли сообщение или нет
     is_reply = True
@@ -73,62 +73,62 @@ def check_params(event):#Принимает event, возвращает [command
     except KeyError:
         is_reply = False
 
-    if command_id == 'help': # !help
+    if command_name == 'help': # !help
         if len(message) == 1:
             return (command_id, {})
         else:
             return False
-    elif command_id == 'online': #!onile
+    elif command_name == 'online': #!onile
         if len(message) == 1:
             return (command_id, {})
         else:
             return False
 
-    elif command_id == 'inactive': # !inacitve <time>
+    elif command_name == 'inactive': # !inacitve <time>
         if is_reply or len(message) > 2:
             return False
         
 
 
-    elif command_id == 'kickdog':
+    elif cammand_name == 'kickdog':
         pass
-    elif command_id == 'kickinactive':
+    elif cammand_name == 'kickinactive':
         pass
-    elif command_id == 'ban':
+    elif cammand_name == 'ban':
         pass
-    elif command_id == 'unban':
+    elif cammand_name == 'unban':
         pass
-    elif command_id == 'mute':
+    elif cammand_name == 'mute':
         pass
-    elif command_id == 'unmute':
+    elif cammand_name == 'unmute':
         pass
-    elif command_id == 'banlist':
+    elif cammand_name == 'banlist':
         pass
-    elif command_id == 'mutelist':
+    elif cammand_name == 'mutelist':
         pass
-    elif command_id == 'role':
+    elif cammand_name == 'role':
         pass
-    elif command_id == 'administration':
+    elif cammand_name == 'administration':
         pass
-    elif command_id == 'createrole':
+    elif cammand_name == 'createrole':
         pass
-    elif command_id == 'droprole':
+    elif cammand_name == 'droprole':
         pass
-    elif command_id == 'renamerole':
+    elif cammand_name == 'renamerole':
         pass
-    elif command_id == 'who':
+    elif cammand_name == 'who':
         pass
-    elif command_id == 'list':
+    elif cammand_name == 'list':
         pass
-    elif command_id == 'ping':
+    elif cammand_name == 'ping':
         pass
-    elif command_id == 'give':
+    elif cammand_name == 'give':
         pass
-    elif command_id == 'drop':
+    elif cammand_name == 'drop':
         pass
-    elif command_id == 'quit':
+    elif cammand_name == 'quit':
         pass
-    elif command_id == 'kick':
+    elif cammand_name == 'kick':
         pass
-    elif command_id == 'randompussy':
+    elif cammand_name == 'randompussy':
         pass
