@@ -12,6 +12,7 @@ from vk_api.longpoll import VkLongPoll, VkEventType
 
 from models.command import Command
 from models.participant import Participant
+from models.role import Role
 
 from config import config
 
@@ -66,41 +67,51 @@ def write_msg(peer_id, message): # отправляет сообщение messa
 
 #READY
 def validate_arg_time(time):#принимает строку, предположительно содержащую время. вернет [True, 'time': {'count': count, 'unit': unit}}] если аргумент написан правильно. Вернет [False, {}] если аргумент не является параметром времени!inactive 
-    range_d = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
+    range_d = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
     range_w = ['m', 'd', 'h', 'м', 'д', 'ч']
 
     if len(time) == 2:
         if time[0] in range_d and time[1] in range_w:
             count = int(time[0])
             unit = str(time[1])
+            if count == 0:
+                count = 1
+                unit = 'h'
             return (True, {'time': {'count': count, 'unit': unit}})
     elif len(time) == 3:
         if time[0] in range_d and time[1] in range_d and time[2] in range_w:
             count = int(str(time[0] + time[1]))
             unit = str(time[2])
+            if count == 0:
+                count = 1
+                unit = 'h'
             return (True, {'time': {'count': count, 'unit': unit}})
     return (False, {})
 
 #READY
-def validate_arg_link(raw, args, scenario):
+def validate_arg_link(raw, link, scenario):
     if scenario == 1: #Ссылка в event.raw
         try:
             intruder_id = str(raw[6]['mentions'])[1:-1]
-        except KeyError: #если переслали свое же сообщение
+        except KeyError: 
             return (False, {})
         from_id = raw[6]['from']
-        return (True, {'links': {'from': from_id, 'intruder_id': intruder_id}})
+        return (True, {'links': {'from_id': from_id, 'intruder_id': intruder_id}})
     if scenario == 2: #Ссылка в event.text
-        if args[0] == '[': # '[id116582288|маргарита]'
-            intruder_id = str(raw[6]['mentions'])[1:-1]
-            bad_link = args[3:12]
+        if link[0] == '[': # '[id116582288|маргарита]'
+            try:
+                intruder_id = str(raw[6]['mentions'])[1:-1]
+            except KeyError:
+                return (False, {})
+            bad_link = link[3:12]
             try: #Если ввлели '[...[id116582288|маргарита]'
                 Participant.get(Participant.id == bad_link)
             except Exception:
+                print('ya govno3')
                 return (False, {})
             from_id = raw[6]['from']
-            return (True, {'links': {'from': from_id, 'intruder_id': intruder_id}})
-        elif args[0:15] == 'https://vk.com/':# 'https://vk.com/id237350735'
+            return (True, {'links': {'from_id': from_id, 'intruder_id': intruder_id}})
+        elif link[0:15] == 'https://vk.com/':# 'https://vk.com/id237350735'
             return (False, {})
     return (False, {})
 
@@ -161,55 +172,189 @@ def validate_params(event):#Принимает event, возвращает (comm
 
     #READY
     elif command_name == 'ban': # !ban <user>
-        if is_reply: #Сообщение не пересылали. Ссылка в event.raw
+        if is_reply: #Сообщение пересылали. Ссылка в event.raw
             if count_of_params == 0:
-                return(validate_arg_link(raw=event.raw, args=params, scenario = 1))
+                return(command_id, validate_arg_link(raw=event.raw, link=params, scenario = 1))
         else: #Сообщение не пересылали. Ссылка в event.text
-            if len(params) == 1:
-                return(validate_arg_link(raw=event.raw, args=params[0], scenario = 2))
+            if count_of_params == 1 and validate_arg_link(raw=event.raw, link=params[0], scenario = 2)[0]:
+                return(command_id, validate_arg_link(raw=event.raw, link=params[0], scenario = 2))
         return (False, {})
 
     #READY
-    elif command_name == 'unban':
+    elif command_name == 'unban': # !unban <user>
         if is_reply: #Сообщение не пересылали. Ссылка в event.raw
             if count_of_params == 0:
-                return(validate_arg_link(raw=event.raw, args=params, scenario = 1))
+                return(command_id, validate_arg_link(raw=event.raw, link=params, scenario = 1))
         else: #Сообщение не пересылали. Ссылка в event.text
-            if len(params) == 1:
-                return(validate_arg_link(raw=event.raw, args=params[0], scenario = 2))
+            if count_of_params == 1:
+                return(command_id, validate_arg_link(raw=event.raw, link=params[0], scenario = 2))
         return (False, {})
 
-    elif command_name == 'mute':
-        pass
-    elif command_name == 'unmute':
-        pass
-    elif command_name == 'banlist':
-        pass
-    elif command_name == 'mutelist':
-        pass
-    elif command_name == 'role':
-        pass
-    elif command_name == 'administration':
-        pass
+    #READY
+    elif command_name == 'mute': # !mite <user> <time>
+        if is_reply: #Сообщение пересылали. Ссылка в event.raw
+            if count_of_params == 0: # !mute
+                if validate_arg_link(raw=event.raw, link=params, scenario = 1)[1]: #Забираем ссылки, время дефолтное
+                    intruder_id = validate_arg_link(raw=event.raw, link=params, scenario = 1)[1]['links']['intruder_id']
+                    from_id = validate_arg_link(raw=event.raw, link=params, scenario = 1)[1]['links']['from_id']
+                    return(command_id, {'links': {'from': from_id, 'intruder_id': intruder_id}}, {'time:': {'count': 1, 'unit': 'h'}})
+                else:
+                    return (False, {})
+
+            elif count_of_params == 1: # !mute <time>
+                if validate_arg_link(raw=event.raw, link=params, scenario = 1)[0]: #Забираем ссылки
+                    intruder_id = validate_arg_link(raw=event.raw, link=params, scenario = 1)[1]['links']['intruder_id']
+                    from_id = validate_arg_link(raw=event.raw, link=params, scenario = 1)[1]['links']['from_id']
+                else:
+                    return (False, {})
+                if validate_arg_time(params[0])[0]:
+                    time = validate_arg_time(params[0])[1]
+                else:
+                    return (False, {})
+                return(command_id, {'links': {'from': from_id, 'intruder_id': intruder_id}}, time)
+
+        else:  #Сообщение не пересылали. Ссылка в event.text
+            if count_of_params == 1: # !mute <user>
+                print(params[0])
+                if validate_arg_link(raw=event.raw, link=params[0], scenario = 2)[0]:
+                    intruder_id = validate_arg_link(raw=event.raw, link=params[0], scenario = 2)[1]['links']['intruder_id']
+                    from_id = validate_arg_link(raw=event.raw, link=params[0], scenario = 2)[1]['links']['from_id']
+                else:
+                    print('hui')
+                    return (False, {})
+                return(command_id, {'links': {'from': from_id, 'intruder_id': intruder_id}}, {'time:': {'count': 1, 'unit': 'h'}})
+
+            elif count_of_params == 2: # !mute <user> <time>
+                if validate_arg_link(raw=event.raw, link=params[0], scenario = 2)[0]:
+                    intruder_id = validate_arg_link(raw=event.raw, link=params[0], scenario = 2)[1]['links']['intruder_id']
+                    from_id = validate_arg_link(raw=event.raw, link=params[0], scenario = 2)[1]['links']['from_id']
+                else:
+                    return (False, {})
+
+                if validate_arg_time(params[1])[0]:
+                    time = validate_arg_time(params[1])[1]
+                else:
+                    return (False, {})
+                return(command_id, {'links': {'from': from_id, 'intruder_id': intruder_id}}, time)
+        return (False, {})
+
+    #READY
+    elif command_name == 'unmute': # !unmute <user>
+        if is_reply: #Сообщение пересылали. Ссылка в event.raw
+            if count_of_params == 0:
+                return(command_id, validate_arg_link(raw=event.raw, link=params, scenario = 1))
+        else: #Сообщение не пересылали. Ссылка в event.text
+            if count_of_params == 1 and validate_arg_link(raw=event.raw, link=params[0], scenario = 2)[0]:
+                return(command_id, validate_arg_link(raw=event.raw, link=params[0], scenario = 2))
+        return (False, {})
+
+    #READY
+    elif command_name == 'banlist': # !banlist
+        if count_of_params == 0:
+            return (command_id, {})
+        else:
+            return (False, {})
+
+    #READY
+    elif command_name == 'mutelist': # !mutelist
+        if count_of_params == 0:
+            return (command_id, {})
+        else:
+            return (False, {})
+
+    #READY
+    elif command_name == 'role': # !role
+        if count_of_params == 0:
+            return (command_id, {})
+        else:
+            return (False, {})
+
+    #READY
+    elif command_name == 'administration': # !administration
+        if count_of_params == 0:
+            return (command_id, {})
+        else:
+            return (False, {})
+
     elif command_name == 'createrole':
         pass
     elif command_name == 'droprole':
         pass
     elif command_name == 'renamerole':
         pass
-    elif command_name == 'who':
-        pass
-    elif command_name == 'list':
-        pass
-    elif command_name == 'ping':
-        pass
+
+    #READY
+    elif command_name == 'who': # !who <user>
+        if is_reply: #Сообщение пересылали. Ссылка в event.raw
+            if count_of_params == 0:
+                return(command_id, validate_arg_link(raw=event.raw, link=params, scenario = 1)[1]['links']['intruder_id'])
+        else: #Сообщение не пересылали. Ссылка в event.text
+            if count_of_params == 1 and validate_arg_link(raw=event.raw, link=params[0], scenario = 2)[0]:
+                return(command_id, validate_arg_link(raw=event.raw, link=params[0], scenario = 2)[1]['links']['intruder_id'])
+        return (False, {})
+
+    #READY
+    elif command_name == 'list': # !list <role>
+        if count_of_params == 1:
+            try:
+                role_id = Role.get(Role.role_name == params[0]).id
+                return (command_id, {'role_id': role_id})
+            except DoesNotExist:
+                return (False, {})
+        else:
+            return (False, {})
+
+    #READY
+    elif command_name == 'ping': # !ping <role>
+        if count_of_params == 1:
+            try:
+                role_id = Role.get(Role.role_name == params[0]).id
+                return (command_id, {'role_id': role_id})
+            except DoesNotExist:
+                return (False, {})
+        else:
+            return (False, {})
+
     elif command_name == 'give':
         pass
-    elif command_name == 'drop':
-        pass
-    elif command_name == 'quit':
-        pass
-    elif command_name == 'kick':
-        pass
-    elif command_name == 'randompussy':
-        pass
+
+    #READY
+    elif command_name == 'drop': # !drop <user>
+        if is_reply: #Сообщение пересылали. Ссылка в event.raw
+            if count_of_params == 0:
+                return(command_id, validate_arg_link(raw=event.raw, link=params, scenario = 1)[1]['links']['intruder_id'])
+        else: #Сообщение не пересылали. Ссылка в event.text
+            if count_of_params == 1 and validate_arg_link(raw=event.raw, link=params[0], scenario = 2)[0]:
+                return(command_id, validate_arg_link(raw=event.raw, link=params[0], scenario = 2)[1]['links']['intruder_id'])
+        return (False, {})
+
+    #READY
+    elif command_name == 'quit': # !quite
+        if count_of_params == 0:
+            return (command_id, {})
+        else:
+            return (False, {})
+
+    #READY
+    elif command_name == 'kick': # !kick <user>
+        if is_reply: #Сообщение пересылали. Ссылка в event.raw
+            if count_of_params == 0:
+                return(command_id, validate_arg_link(raw=event.raw, link=params, scenario = 1)[1]['links']['intruder_id'])
+        else: #Сообщение не пересылали. Ссылка в event.text
+            if count_of_params == 1 and validate_arg_link(raw=event.raw, link=params[0], scenario = 2)[0]:
+                return(command_id, validate_arg_link(raw=event.raw, link=params[0], scenario = 2)[1]['links']['intruder_id'])
+        return (False, {})
+
+    #READY
+    elif command_name == 'randompussy': # !randompussy
+        if count_of_params == 0:
+            return (command_id, {})
+        else:
+            return (False, {})
+
+    #READY
+    elif command_name == 'newgay':
+        if count_of_params == 0:
+            return (command_id, {})
+        else:
+            return (False, {})
