@@ -1,7 +1,8 @@
+import re
+
 from peewee import PostgresqlDatabase, DoesNotExist
 
 from random import getrandbits
-
 
 from models.command import Command
 
@@ -61,11 +62,31 @@ def write_msg(peer_id, message): # отправляет сообщение messa
             'message': message,
             'random_id': getrandbits(64)})
 
-def check_params(event):#Принимает event, возвращает [command_id,{'params_nam': value}] если параметры верные и False если команда написана неправильно
+#READY
+def validate_arg_time(time):#принимает строку, предположительно содержащую время. вернет [True, {'count': count, 'unit': unit}] если аргумент написан правильно. Вернет [False, {}] если аргумент не является параметром времени
+    range_d = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+    range_w = ['m', 'd', 'h', 'м', 'д', 'ч']
+
+    if len(time) == 2:
+        if time[0] in range_d and time[1] in range_w:
+            count = int(time[0])
+            unit = str(time[1])
+            return (True, {'time': {'count': count, 'unit': unit}})
+    elif len(time) == 3:
+        if time[0] in range_d and time[1] in range_d and time[2] in range_w:
+            count = int(str(time[0] + time[1]))
+            unit = str(time[2])
+            return (True, {'time': {'count': count, 'unit': unit}})
+    return (False, {})
+
+def validate_params(event):#Принимает event, возвращает [command_id, {'params_nam': value}] если параметры верные и [False] если команда написана неправильно
     #берем айди команды
     command_id = recognize_command(event.raw[5].lower(), event.peer_id, echo=False)[1]
     command_name = Command.get(Command.id == command_id).name_eng
     message = event.text.lower()
+    params = message.split(' ')
+    del params[0]
+    count_of_params = len(params)
     #Определяем, пересылали ли сообщение или нет
     is_reply = True
     try:
@@ -73,62 +94,68 @@ def check_params(event):#Принимает event, возвращает [command
     except KeyError:
         is_reply = False
 
+    #READY
     if command_name == 'help': # !help
-        if len(message) == 1:
+        if count_of_params == 0:
             return (command_id, {})
         else:
-            return False
+            return (False, {})
+
+    #READY
     elif command_name == 'online': #!onile
-        if len(message) == 1:
+        if count_of_params == 0:
             return (command_id, {})
         else:
-            return False
+            return (False, {})
 
     elif command_name == 'inactive': # !inacitve <time>
-        if is_reply or len(message) > 2:
-            return False
-        
+        if count_of_params == 0:
+            return (command_id, {'time:': {'count': 7, 'unit': 'd'}})
+        elif count_of_params == 1:
+            return validate_arg_time(params[0])
+        else:
+            return (False, {})
 
 
-    elif cammand_name == 'kickdog':
+    elif command_name == 'kickdog':
         pass
-    elif cammand_name == 'kickinactive':
+    elif command_name == 'kickinactive':
         pass
-    elif cammand_name == 'ban':
+    elif command_name == 'ban':
         pass
-    elif cammand_name == 'unban':
+    elif command_name == 'unban':
         pass
-    elif cammand_name == 'mute':
+    elif command_name == 'mute':
         pass
-    elif cammand_name == 'unmute':
+    elif command_name == 'unmute':
         pass
-    elif cammand_name == 'banlist':
+    elif command_name == 'banlist':
         pass
-    elif cammand_name == 'mutelist':
+    elif command_name == 'mutelist':
         pass
-    elif cammand_name == 'role':
+    elif command_name == 'role':
         pass
-    elif cammand_name == 'administration':
+    elif command_name == 'administration':
         pass
-    elif cammand_name == 'createrole':
+    elif command_name == 'createrole':
         pass
-    elif cammand_name == 'droprole':
+    elif command_name == 'droprole':
         pass
-    elif cammand_name == 'renamerole':
+    elif command_name == 'renamerole':
         pass
-    elif cammand_name == 'who':
+    elif command_name == 'who':
         pass
-    elif cammand_name == 'list':
+    elif command_name == 'list':
         pass
-    elif cammand_name == 'ping':
+    elif command_name == 'ping':
         pass
-    elif cammand_name == 'give':
+    elif command_name == 'give':
         pass
-    elif cammand_name == 'drop':
+    elif command_name == 'drop':
         pass
-    elif cammand_name == 'quit':
+    elif command_name == 'quit':
         pass
-    elif cammand_name == 'kick':
+    elif command_name == 'kick':
         pass
-    elif cammand_name == 'randompussy':
+    elif command_name == 'randompussy':
         pass
