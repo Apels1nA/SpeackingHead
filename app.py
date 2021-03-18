@@ -3,7 +3,7 @@ from vk_api.longpoll import VkLongPoll, VkEventType
 
 from resources.instruments import recognize_command
 from resources.instruments import write_msg
-from resources.instruments import check_params
+from resources.instruments import validate_params
 
 from config import config
 
@@ -20,12 +20,18 @@ for event in longpoll.listen():
     print('-'*22)
 
     if event.raw[0] == 4: #если пришло сообщение
+        print('RECOGNIZE COMMAND:')
         print(recognize_command(event.raw[5].lower(), event.peer_id, echo=False))
         if recognize_command(event.raw[5].lower(), event.peer_id, echo=True)[0]: #если пришла команда
             print('\n\n')
             print('Пришла команда')
             print('\n\n')
-            check_params(event)
+            print('\n\nANSWER\n')
+            print(validate_params(event))
+            print('\nANSWER\n\n')
+            if (validate_params(event))[1]: #Если аргументы верны
+                pass
+
 
         else:
             print('\n\n')
@@ -34,3 +40,5 @@ for event in longpoll.listen():
 
     if event.raw[1] == 6: #Если это новый участник
         write_msg(event.peer_id, 'Новый уастник')
+
+#   print('AMA BIG BAD GAYYYYYY')

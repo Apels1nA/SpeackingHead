@@ -33,12 +33,13 @@ command = (
     (21, 'drop', 'уволить'),
     (22, 'quit', 'уволиться'),
     (23, 'kick', 'кик'),
-    (24, 'randompussy', 'рандомнаяпиздюлина'))
+    (24, 'pussy', 'пиздюлина'),
+    (25, 'gay', 'пидор'))
 
 role = (
-    (1, 'admin'),
-    (2, 'moderator'),
-    (3, 'user'))
+    (1, 'admin', 1),
+    (2, 'moderator', 2),
+    (3, 'user', 3))
 
 roletocommand = (
     (1, 1, 1),
@@ -85,9 +86,11 @@ roletocommand = (
 
     (41, 3, 1),
     (42, 3, 2),
-    (43, 3, 13),
-    (44, 3, 17),
-    (45, 3, 19))
+    (43, 3, 12),
+    (44, 3, 13),
+    (45, 3, 17),
+    (46, 3, 18),
+    (47, 3, 19))
 
 
 with con:
@@ -99,7 +102,7 @@ with con:
     cur.executemany(query_command, command)
 
     cur.execute("TRUNCATE TABLE role CASCADE")
-    query_role = "INSERT INTO role (id, role_name) VALUES (%s, %s)"
+    query_role = "INSERT INTO role (id, role_name, level) VALUES (%s, %s, %s)"
     cur.executemany(query_role, role)
     
     cur.execute("TRUNCATE TABLE roletocommand CASCADE")

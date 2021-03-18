@@ -19,6 +19,7 @@ token = config['api']['api_key']
 vk = vk_api.VkApi(token=token)
 longpoll = VkLongPoll(vk)
 
+print('\n\nДля импорта участников напишите в беседу любое сообщение\n\n')
 
 def import_participant(peer_id): #импортирует участников беседы
     all_members = vk.method('messages.getConversationMembers', {
