@@ -1,5 +1,6 @@
 from peewee import PostgresqlDatabase, DoesNotExist
 from config import config
+from random import getrandbits
 
 db = PostgresqlDatabase(
     database=config['db']['db'],
@@ -38,8 +39,8 @@ def import_participant(peer_id): #импортирует участников б
             participant.save(force_insert=True)
     print('Импорт завершен')
 
-
 for event in longpoll.listen():
+
     if event.type == VkEventType.MESSAGE_NEW and event.text:
         if event.to_me:
             import_participant(event.peer_id)

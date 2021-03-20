@@ -7,8 +7,8 @@ def migrate(migrator, database, fake=False, **kwargs):
 
     @migrator.create_model 
     class Ban(Model):
-        id_vk = ForeignKeyField(Participant, backref='ban', )
-        from_id_vk = CharField()
+        id_vk = ForeignKeyField(Participant, backref='ban')
+        from_id_vk = ForeignKeyField(Participant, backref='ban')
         description = CharField()
 
 def rollback(migrator, database, fake=False, **kwargs):

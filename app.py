@@ -1,9 +1,10 @@
 import vk_api
 from vk_api.longpoll import VkLongPoll, VkEventType
 
-from resources.instruments import recognize_command
-from resources.instruments import write_msg
-from resources.instruments import validate_params
+from resources.utils import recognize_command
+from resources.utils import write_msg
+from resources.utils import validate_params
+from resources.utils import check_permition
 
 from config import config
 
@@ -30,8 +31,11 @@ for event in longpoll.listen():
             print(validate_params(event))
             print('\nANSWER\n\n')
             if (validate_params(event))[1]: #Если аргументы верны
-                pass
-
+                print(check_permition(validate_params(event)))
+                if check_permition(validate_params(event))[0]:
+                    write_msg(event.peer_id, 'Доступна')
+                else:
+                    write_msg(event.peer_id, check_permition(validate_params(event))[1])
 
         else:
             print('\n\n')

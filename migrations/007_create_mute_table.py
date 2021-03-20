@@ -8,7 +8,7 @@ def migrate(migrator, database, fake=False, **kwargs):
     @migrator.create_model 
     class Mute(Model):
         id_vk = ForeignKeyField(Participant, backref='mute')
-        from_id_vk = CharField()
+        from_id_vk = ForeignKeyField(Participant, backref='mute')
         start_time = DateTimeField()
         end_time = DateTimeField()
         description = CharField()
