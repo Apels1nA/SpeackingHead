@@ -1,5 +1,5 @@
 import unittest
-from resources.instruments import *
+from resources.utils import *
 
 class TestInstruments(unittest.TestCase):
 
@@ -55,6 +55,13 @@ class TestInstruments(unittest.TestCase):
         self.assertEqual(validate_arg_link(raw=[4, 2516, 532497, 2000000001, 1616069409, '!ban @pequilasdf', {'from': '294211206'}, {}, 0], link='@pequilasdf', scenario=2), (False, {}))
         self.assertEqual(validate_arg_link(raw=[4, 2517, 532497, 2000000001, 1616069507, '!ban https://vk.com/id237350735', {'from': '294211206'}, {}, 0], link='https://vk.com/id237350735', scenario=2), (False, {}))
         self.assertEqual(validate_arg_link(raw=[4, 2519, 532497, 2000000001, 1616069597, '!ban [[id237350735|@pequil]', {'from': '294211206', 'mentions': [237350735], 'marked_users': [[1, [237350735]]]}, {}, 0], link='[[id237350735|@pequil]', scenario=2), (False, {}))
+
+    def test_validate_role(self):
+        self.assertEqual(validate_role('creator'), (True, {'role_id': 1}))
+        self.assertEqual(validate_role('admin'), (True, {'role_id': 2}))
+        self.assertEqual(validate_role('moderator'), (True, {'role_id': 3}))
+        self.assertEqual(validate_role('user'), (True, {'role_id': 4}))
+        self.assertEqual(validate_role('useruser'), (False, {}))
 
 if __name__ == "__main__":
     unittest.main()
